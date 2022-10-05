@@ -56,7 +56,12 @@ def handle_cd(current_working_directory, new_working_directory):
     :param new_working_directory: name of the sub directory or '..' for parent
     :return: absolute path of new current working directory
     """
-    raise NotImplementedError('Your implementation here.')
+    path = os.path.join(current_working_directory, new_working_directory)
+
+    if os.path.exists(path):
+        os.chdir(new_working_directory)
+    else:
+        print(f"{new_working_directory} doesn't exist")
 
 
 def handle_mkdir(current_working_directory, directory_name):
@@ -161,7 +166,7 @@ class ClientThread(Thread):
                 print('Exiting the application.')
                 break
             elif command == 'cd':
-                print('cd')
+                handle_cd(os.getcwd(), argument)
             elif command == 'mkdir':
                 handle_mkdir(os.getcwd(), argument)
             elif command == 'rm':

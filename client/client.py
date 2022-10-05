@@ -64,8 +64,14 @@ def issue_cd(command_and_arg, client_socket, eof_token):
     :param client_socket: the active client socket object.
     :param eof_token: a token to indicate the end of the message.
     """
-    raise NotImplementedError('Your implementation here.')
+    command_with_token = command_and_arg.encode() + eof_token.encode()
+    client_socket.sendall(command_with_token)
+    split = command_and_arg.split(' ')
+    dir_name = split[1]
+    print(f'Current working directory has been changed to "{dir_name}"')
 
+    cwd = receive_message_ending_with_token(client_socket, 1024, eof_token)
+    print(cwd.decode())
 
 def issue_mkdir(command_and_arg, client_socket, eof_token):
     """
@@ -123,16 +129,21 @@ def issue_ul(command_and_arg, client_socket, eof_token):
     print(f'Sent {command_and_arg} Command  to server')
 
     # Read file to be uploaded
-    with open(filename_argument, 'rb') as f:
-        file_content = f.read()
 
-    # Send the read file to the server
-    file_content_with_token = file_content + eof_token.encode()
-    client_socket.sendall(file_content_with_token)
-    print(f'Sent the contents of "{filename_argument}" to server')
-    # Receiving the current working directory using the helper method
-    cwd = receive_message_ending_with_token(client_socket, 1024, eof_token)
-    print(cwd.decode())
+    path = os.path.join(os.getcwd(), filename_argument)
+    if os.path.exists(path):
+        with open(filename_argument, 'rb') as f:
+            file_content = f.read()
+
+        # Send the read file to the server
+        file_content_with_token = file_content + eof_token.encode()
+        client_socket.sendall(file_content_with_token)
+        print(f'Sent the contents of "{filename_argument}" to server')
+        # Receiving the current working directory using the helper method
+        cwd = receive_message_ending_with_token(client_socket, 1024, eof_token)
+        print(cwd.decode())
+    else:
+        print(f'{filename_argument} doesnt exist')
 
 def issue_dl(command_and_arg, client_socket, eof_token):
     """
@@ -180,7 +191,7 @@ def main():
             print('Exiting the application.')
             break
         elif command == 'cd':
-            print('cd')
+            issue_cd(command_with_args, client_socket , eof_token)
         elif command == 'mkdir':
             issue_mkdir(command_with_args, client_socket , eof_token)
         elif command == 'rm':
