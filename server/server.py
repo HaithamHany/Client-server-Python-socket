@@ -65,8 +65,9 @@ def handle_mkdir(current_working_directory, directory_name):
     :param current_working_directory: string of current working directory
     :param directory_name: name of new sub directory
     """
-    raise NotImplementedError('Your implementation here.')
-
+    path = os.path.join(current_working_directory, directory_name)
+    os.mkdir(path)
+    print(f"{directory_name} directory has been created")
 
 def handle_rm(current_working_directory, object_name):
     """
@@ -153,22 +154,22 @@ class ClientThread(Thread):
             command = receive_message_ending_with_token(self.service_socket, 1024, random_eof_token)
             split = command.decode().split(' ')
             command = split[0]
-            file_name = split[1]
+            argument = split[1]
 
-            print(f'Received {command} {file_name} from:', self.address)
+            print(f'Received {command} {argument} from:', self.address)
             if command == 'exit':
                 print('Exiting the application.')
                 break
             elif command == 'cd':
                 print('cd')
             elif command == 'mkdir':
-                print('mkdir')
+                handle_mkdir(os.getcwd(), argument)
             elif command == 'rm':
-                handle_rm(os.getcwd(), file_name)
+                handle_rm(os.getcwd(), argument)
             elif command == 'ul':
-                handle_ul(os.getcwd(), file_name, self.service_socket, random_eof_token)
+                handle_ul(os.getcwd(), argument, self.service_socket, random_eof_token)
             elif command == 'dl':
-                handle_dl(os.getcwd(), file_name, self.service_socket, random_eof_token)
+                handle_dl(os.getcwd(), argument, self.service_socket, random_eof_token)
 
             # send current dir info
             updated_directory =  get_working_directory_info(os.path.abspath(os.getcwd())).encode() + random_eof_token.encode()
