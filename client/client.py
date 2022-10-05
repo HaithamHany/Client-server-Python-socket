@@ -166,7 +166,6 @@ def issue_dl(command_and_arg, client_socket, eof_token):
     if file_content == 'invalid'.encode():
         print("File does not exit in this directory!")
     else:
-        file_content = receive_message_ending_with_token(client_socket, 1024, eof_token)
         with open(path, 'wb') as f:
             f.write(file_content)
             f.close()
