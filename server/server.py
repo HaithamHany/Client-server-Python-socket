@@ -84,7 +84,9 @@ def handle_rm(current_working_directory, object_name):
 
     path = current_working_directory +'\\'+ object_name;
 
-    if os.path.isfile(path):
+    if os.path.isdir(path):
+        os.rmdir(object_name)
+    elif os.path.isfile(path):
         os.remove(object_name)
         print(f"{object_name} has been removed")
     else:
@@ -104,11 +106,12 @@ def handle_ul(current_working_directory, file_name, service_socket, eof_token):
     file_content = receive_message_ending_with_token(service_socket, 1024, eof_token)
     path = current_working_directory +'\\'+ file_name
 
-    with open(path, 'wb+') as f:
-        f.write(file_content)
-        f.close()
+    if os.path.exists(current_working_directory):
+        with open(path, 'wb+') as f:
+            f.write(file_content)
+            f.close()
 
-    print(f"content of {file_name} has been uploaded")
+        print(f"content of {file_name} has been uploaded")
 
 
 def handle_dl(current_working_directory, file_name, service_socket, eof_token):
@@ -121,12 +124,17 @@ def handle_dl(current_working_directory, file_name, service_socket, eof_token):
     :param eof_token: a token to indicate the end of the message.
     """
     path = current_working_directory + '\\' + file_name
-    with open(path, 'rb') as f:
-        file_content = f.read()
 
-    file_content_with_token = file_content + eof_token.encode()
-    service_socket.sendall(file_content_with_token)
-    print(f"content of {file_name} is being downloaded")
+    if os.path.isfile(file_name):
+        with open(path, 'rb') as f:
+            file_content = f.read()
+
+        file_content_with_token = file_content + eof_token.encode()
+        service_socket.sendall(file_content_with_token)
+        print(f"content of {file_name} is being downloaded")
+        return
+
+    service_socket.sendall('invalid'.encode() + eof_token.encode())
 
 
 class ClientThread(Thread):
@@ -159,11 +167,15 @@ class ClientThread(Thread):
             command = receive_message_ending_with_token(self.service_socket, 1024, random_eof_token)
             split = command.decode().split(' ')
             command = split[0]
-            argument = split[1]
+
+            if len(split) > 1:
+                argument = split[1]
 
             print(f'Received {command} {argument} from:', self.address)
             if command == 'exit':
                 print('Exiting the application.')
+                self.service_socket.close()
+                print('Connection closed from:', self.address)
                 break
             elif command == 'cd':
                 handle_cd(os.getcwd(), argument)
@@ -177,11 +189,8 @@ class ClientThread(Thread):
                 handle_dl(os.getcwd(), argument, self.service_socket, random_eof_token)
 
             # send current dir info
-            updated_directory =  get_working_directory_info(os.path.abspath(os.getcwd())).encode() + random_eof_token.encode()
+            updated_directory = get_working_directory_info(os.path.abspath(os.getcwd())).encode() + random_eof_token.encode()
             self.service_socket.sendall(updated_directory)
-
-        # print('Connection closed from:', self.address)
-        # self.service_socket.close()
 
 
 def main():

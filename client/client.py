@@ -1,7 +1,7 @@
 import os
 import socket
 
-eof_token = None
+eof_token = ''
 
 def receive_message_ending_with_token(active_socket, buffer_size, eof_token):
     """
@@ -119,19 +119,17 @@ def issue_ul(command_and_arg, client_socket, eof_token):
     :param client_socket: the active client socket object.
     :param eof_token: a token to indicate the end of the message.
     """
-    #Sending the full ul command
-
-    command_with_token = command_and_arg.encode() + eof_token.encode()
-    client_socket.sendall(command_with_token)
+    #  the full ul command
     split = command_and_arg.split(' ')
     filename_argument = split[1]
 
-    print(f'Sent {command_and_arg} Command  to server')
-
     # Read file to be uploaded
+    if os.path.isfile(filename_argument):
 
-    path = os.path.join(os.getcwd(), filename_argument)
-    if os.path.exists(path):
+        command_with_token = command_and_arg.encode() + eof_token.encode()
+        client_socket.sendall(command_with_token)
+        print(f'Sent "{command_and_arg}" Command  to server')
+
         with open(filename_argument, 'rb') as f:
             file_content = f.read()
 
@@ -143,7 +141,7 @@ def issue_ul(command_and_arg, client_socket, eof_token):
         cwd = receive_message_ending_with_token(client_socket, 1024, eof_token)
         print(cwd.decode())
     else:
-        print(f'{filename_argument} doesnt exist')
+        print(f'"{filename_argument}" does not exist on the client side')
 
 def issue_dl(command_and_arg, client_socket, eof_token):
     """
@@ -165,9 +163,13 @@ def issue_dl(command_and_arg, client_socket, eof_token):
 
     path = os.getcwd() + '\\' + filename_argument
 
-    with open(path, 'wb') as f:
-        f.write(file_content)
-        f.close()
+    if file_content == 'invalid'.encode():
+        print("File does not exit in this directory!")
+    else:
+        file_content = receive_message_ending_with_token(client_socket, 1024, eof_token)
+        with open(path, 'wb') as f:
+            f.write(file_content)
+            f.close()
 
     cwd = receive_message_ending_with_token(client_socket, 1024, eof_token)
     print(cwd.decode())
@@ -188,6 +190,8 @@ def main():
 
         # call the corresponding command function or exit
         if command == 'exit':
+
+            client_socket.sendall(command.encode()+eof_token.encode())
             print('Exiting the application.')
             break
         elif command == 'cd':
@@ -200,7 +204,8 @@ def main():
             issue_ul(command_with_args, client_socket , eof_token)
         elif command == 'dl':
             issue_dl(command_with_args, client_socket, eof_token)
-
+        else:
+            print('Enter a valid command.')
 
 if __name__ == '__main__':
     main()
