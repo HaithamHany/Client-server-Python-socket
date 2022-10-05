@@ -75,7 +75,14 @@ def handle_rm(current_working_directory, object_name):
     :param current_working_directory: string of current working directory
     :param object_name: name of sub directory or file to remove
     """
-    raise NotImplementedError('Your implementation here.')
+
+    path = current_working_directory +'\\'+ object_name;
+
+    if os.path.isfile(path):
+        os.remove(object_name)
+        print(f"{object_name} has been removed")
+    else:
+        print(f"file {object_name} has been attempted to be removed but file doesn't exist")
 
 
 def handle_ul(current_working_directory, file_name, service_socket, eof_token):
@@ -94,6 +101,8 @@ def handle_ul(current_working_directory, file_name, service_socket, eof_token):
     with open(path, 'wb+') as f:
         f.write(file_content)
         f.close()
+
+    print(f"content of {file_name} has been uploaded")
 
 
 def handle_dl(current_working_directory, file_name, service_socket, eof_token):
