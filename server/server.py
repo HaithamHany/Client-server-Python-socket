@@ -62,7 +62,7 @@ def handle_cd(current_working_directory, new_working_directory):
     if os.path.exists(path):
         os.chdir(new_working_directory)
     else:
-        print(f"{new_working_directory} doesn't exist")
+        print(f"{new_working_directory} directory doesn't exist")
 
 
 def handle_mkdir(current_working_directory, directory_name):
