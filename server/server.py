@@ -6,6 +6,7 @@ from threading import Thread
 import os
 from pathlib import Path
 
+root = os.getcwd()
 def get_working_directory_info(working_directory):
     """
     Creates a string representation of a working directory and its contents.
@@ -150,7 +151,7 @@ class ClientThread(Thread):
         random_eof_token = '<' + generate_random_eof_token() + '>'
 
         # establish working directory,'
-        current_working_directory = get_working_directory_info(os.path.abspath(os.getcwd()))
+        current_working_directory = get_working_directory_info(os.path.abspath(root))
         current_directory_with_token = current_working_directory.encode() + random_eof_token.encode()
 
         # send random eof token
