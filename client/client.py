@@ -24,8 +24,6 @@ def receive_message_ending_with_token(active_socket, buffer_size, eof_token):
     return message_content
 
 
-
-
 def initialize(host, port):
     """
     1) Creates a socket object and connects to the server.
